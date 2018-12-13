@@ -80,6 +80,14 @@ class Paint(QMainWindow):  # Создание окна
 
         # При нажатии вызов функции
         copyAction.triggered.connect(self.copyArea)
+        
+        #Создание кнопки вырезать
+        cutAction = QAction(QIcon('icons/cut.jpg'), 'Вырезать', self)
+        cutAction.setShortcut('Ctrl+X')  # Добавление комбинации клавиш
+        fileMenu.addAction(cutAction)  # Добавление в меню
+        
+        # Вызов функции при нажатии
+        cutAction.triggered.connect(self.cutArea)
 
         # Создание кнопки для вставки области
         pasteAction = QAction(QIcon('icons/paste.jpg'), 'Вставить', self)
@@ -352,6 +360,22 @@ class Paint(QMainWindow):  # Создание окна
         w = self.get_cord("Ширина", "Ширина", 0, 1200)  # ширина
         h = self.get_cord("Высота", "Высота", 0, 800)  # высота
         self.copyA = QImage.copy(self.image, x, y, w, h)
+
+    def cutArea(self):
+        x = self.get_cord('Координата x',
+                          'Координата левого верхнего угла по x',
+                          0, 1200)  # Координата левого верхнего угла по x
+        y = self.get_cord('Координата по y',
+                          'Координата левого верхнего угла по y',
+                          0, 800)  # Координата левого верхнего угла по y
+        w = self.get_cord("Ширина", "Ширина", 0, 1200)  # ширина
+        h = self.get_cord("Высота", "Высота", 0, 800)  # высота
+        self.copyA = QImage.copy(self.image, x, y, w, h)
+        cP = QPainter(self.image)  # Создание объекта класса QPainter
+        cP.setPen(Qt.white)
+        cP.setBrush(Qt.white)
+        cP.drawRect(x, y, w, h)  # Закраска области в белый
+        self.update()  # Обновление рисунка
 
     def pasteArea(self):  # Функция вставки области
         if not self.copyA:  # Если область пустая
