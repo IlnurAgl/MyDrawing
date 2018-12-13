@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QMenuBar, QMenu
 from PyQt5.QtWidgets import QAction, QFileDialog, QColorDialog
 from PyQt5.QtWidgets import QInputDialog, QLabel, QMessageBox
-from PyQt5.QtGui import QImage, QIcon, QPainter, QPen, QColor
+from PyQt5.QtGui import QImage, QIcon, QPainter, QPen, QColor, QPolygon
 from PyQt5.QtCore import Qt, QPoint
 # Импортирование нужных библиотек
 
@@ -80,12 +80,12 @@ class Paint(QMainWindow):  # Создание окна
 
         # При нажатии вызов функции
         copyAction.triggered.connect(self.copyArea)
-        
-        #Создание кнопки вырезать
+
+        # Создание кнопки вырезать
         cutAction = QAction(QIcon('icons/cut.jpg'), 'Вырезать', self)
         cutAction.setShortcut('Ctrl+X')  # Добавление комбинации клавиш
         fileMenu.addAction(cutAction)  # Добавление в меню
-        
+
         # Вызов функции при нажатии
         cutAction.triggered.connect(self.cutArea)
 
@@ -195,6 +195,13 @@ class Paint(QMainWindow):  # Создание окна
 
         # Вызов функции при нажатии
         lineAction.triggered.connect(self.line)
+
+        # Создание кнопки для звезды
+        starAction = QAction(QIcon('icons/star.png'), 'Звезда', self)
+        shapes.addAction(starAction)  # Добавление звезды в меню
+
+        # Вызов функции при нажатии
+        starAction.triggered.connect(self.star)
 
     # Функция нажатия кнопки мыши
     def mousePressEvent(self, event, cord=False):
@@ -345,10 +352,38 @@ class Paint(QMainWindow):  # Создание окна
                            'Координата второй точки по y',
                            0, 800)  # Координата второй точки по y
         cP = QPainter(self.image)
-        cP.setPen(self.brushColor)  # Цвет границ
+        cP.setPen(QPen(self.brushColor, self.brushSize))  # Цвет границ
         cP.setBrush(self.brushColor)  # Цвет фигуры
         cP.drawLine(x1, y1, x2, y2)  # Рисование линии
         self.update()  # Обновление окна
+
+    def star(self):
+        x1 = self.get_cord('Координата x',
+                           'Координата верхней точки по x',
+                           0, 1200)  # Координата верхней точки по x
+        y1 = self.get_cord('Координата по y',
+                           'Координата верхней точки по y',
+                           0, 800)  # Координата верхней точки по y
+        x2 = self.get_cord('Координата x',
+                           'Координата левой точки по x',
+                           0, 1200)  # Координата левой точки по x
+        y2 = self.get_cord('Координата по y',
+                           'Координата левой точки по y',
+                           0, 800)  # Координата левой точки по y
+        x3 = self.get_cord('Координата x',
+                           'Координата левой нижней точки по x',
+                           0, 1200)  # Координата левой нижней точки по x
+        y3 = self.get_cord('Координата по y',
+                           'Координата левой нижней точки по y',
+                           0, 800)  # Координата левой нижней точки по y
+        cP = QPainter(self.image)
+        cP.setPen(self.brushColor)  # Цвет границ
+        cP.setBrush(self.brushColor)  # Цвет фигуры
+        points = QPolygon([QPoint(x2, y2), QPoint(x1 + x1 - x2, y2),
+                           QPoint(x3, y3), QPoint(x1, y1),
+                           QPoint(x1 + x1 - x3, y3)
+                           ])
+        cP.drawPolygon(points)  # Нарисовать полигон
 
     def copyArea(self):  # Функция копирования области
         x = self.get_cord('Координата x',
