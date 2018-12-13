@@ -366,16 +366,17 @@ class Paint(QMainWindow):  # Создание окна
         painter.drawImage(x, y, self.copyA)  # Вывод изображения
         self.update()  # Обновление окна
 
-    def closeEvent(self, event):
+    def closeEvent(self, event):  # Функция для закрытия
+        # Сообщение при закрытии приложения
         reply = QMessageBox.question(self, 'Сообщение',
                                      "Вы уверены, что хотите выйти?",
                                      QMessageBox.Yes |
                                      QMessageBox.No, QMessageBox.No)
 
-        if reply == QMessageBox.Yes:
-            event.accept()
+        if reply == QMessageBox.Yes:  # Если Да
+            event.accept()  # То выход
         else:
-            event.ignore()
+            event.ignore()  # Иначе игнорировать
 
 
 if __name__ == '__main__':
