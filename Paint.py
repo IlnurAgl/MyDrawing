@@ -2,7 +2,7 @@ import sys
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QMenuBar, QMenu
 from PyQt5.QtWidgets import QAction, QFileDialog, QColorDialog
 from PyQt5.QtWidgets import QInputDialog, QLabel, QMessageBox
-from PyQt5.QtGui import QImage, QIcon, QPainter, QPen, QColor, QPolygon
+from PyQt5.QtGui import QImage, QIcon, QPainter, QPen, QColor, QPolygon, QFont
 from PyQt5.QtCore import Qt, QPoint
 # Импортирование нужных библиотек
 
@@ -203,6 +203,13 @@ class Paint(QMainWindow):  # Создание окна
         # Вызов функции при нажатии
         starAction.triggered.connect(self.star)
 
+        # Создание кнопки для текста
+        textAction = QAction(QIcon('icons/text.png'), 'Текст', self)
+        shapes.addAction(textAction)  # # Добавление текста в меню
+
+        # Вызов функции при нажатии
+        textAction.triggered.connect(self.writeText)
+
     # Функция нажатия кнопки мыши
     def mousePressEvent(self, event, cord=False):
         if event.button() == Qt.LeftButton:  # Если нажата левая кнопка
@@ -396,7 +403,24 @@ class Paint(QMainWindow):  # Создание окна
         h = self.get_cord("Высота", "Высота", 0, 800)  # высота
         self.copyA = QImage.copy(self.image, x, y, w, h)
 
-    def cutArea(self):
+    def writeText(self):  # Функция для вывода текста
+        i, okBtnPressed = QInputDialog.getText(
+                    self, "Текст", "Введите текст"
+                )  # Диалоговое окно для ввода текста
+        cP = QPainter(self.image)
+        cP.setPen(self.brushColor)
+        cP.setFont(QFont('Decorative', self.get_cord('Ширина', 'Ширина',
+                                                     1, 12000)))  # Шрифт
+        cP.drawText(self.get_cord('Координата x',
+                                  'Координата левого нижнего угла по x',
+                                  0, 2000),
+                    self.get_cord('Координата y',
+                                  'Координата левого нижнего угла по y',
+                                  0, 2000),
+                    i)  # Координата
+        self.update()  # Обновление страницы
+
+    def cutArea(self):  # Функция для вырезания области
         x = self.get_cord('Координата x',
                           'Координата левого верхнего угла по x',
                           0, 1200)  # Координата левого верхнего угла по x
