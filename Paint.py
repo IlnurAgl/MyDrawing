@@ -22,6 +22,7 @@ class Paint(QMainWindow):  # Создание окна
         self.coords.setText("Координаты:None, None")  # Изначальные координаты
         self.coords.resize(150, 15)  # Изменение размера
         self.coords.move(width - 150, height - 20)  # Перемещение
+
         self.setMouseTracking(True)  # Отслеживание мыши без нажатия
 
         self.copyA = False  # Переменная для области копирования
@@ -210,6 +211,14 @@ class Paint(QMainWindow):  # Создание окна
         # Вызов функции при нажатии
         textAction.triggered.connect(self.writeText)
 
+        # Создание кнопки для треугольник
+        triangleAction = QAction(QIcon('icons/triangle.png'),
+                                 'Треугольник', self)
+        shapes.addAction(triangleAction)
+
+        # Вызов функции при нажатии
+        triangleAction.triggered.connect(self.triangle)
+
     # Функция нажатия кнопки мыши
     def mousePressEvent(self, event, cord=False):
         if event.button() == Qt.LeftButton:  # Если нажата левая кнопка
@@ -390,6 +399,31 @@ class Paint(QMainWindow):  # Создание окна
                            QPoint(x3, y3), QPoint(x1, y1),
                            QPoint(x1 + x1 - x3, y3)
                            ])
+        cP.drawPolygon(points)  # Нарисовать полигон
+
+    def triangle(self):  # Функция для рисования треугольника
+        x1 = self.get_cord('Координата x',
+                           'Координата первой точки по x',
+                           0, 1200)  # Координата первой точки по x
+        y1 = self.get_cord('Координата по y',
+                           'Координата первой точки по y',
+                           0, 800)  # Координата первой точки по y
+        x2 = self.get_cord('Координата x',
+                           'Координата второй точки по x',
+                           0, 1200)  # Координата второй точки по x
+        y2 = self.get_cord('Координата по y',
+                           'Координата второй точки по y',
+                           0, 800)  # Координата второй точки по y
+        x3 = self.get_cord('Координата x',
+                           'Координата третьей точки по x',
+                           0, 1200)  # Координата третьей нижней точки по x
+        y3 = self.get_cord('Координата по y',
+                           'Координата третьей точки по y',
+                           0, 800)  # Координата третьей нижней точки по y
+        cP = QPainter(self.image)
+        cP.setPen(self.brushColor)  # Цвет границ
+        cP.setBrush(self.brushColor)  # Цвет фигуры
+        points = QPolygon([QPoint(x1, y1), QPoint(x2, y2), QPoint(x3, y3)])
         cP.drawPolygon(points)  # Нарисовать полигон
 
     def copyArea(self):  # Функция копирования области
