@@ -1,4 +1,6 @@
 import sys
+import os
+import shutil
 from PyQt5.QtWidgets import QApplication, QMainWindow, QWidget, QMenuBar, QMenu
 from PyQt5.QtWidgets import QAction, QFileDialog, QColorDialog
 from PyQt5.QtWidgets import QInputDialog, QLabel, QMessageBox
@@ -28,11 +30,15 @@ class Paint(QMainWindow):  # Создание окна
         self.coords.resize(150, 15)  # Изменение размера
         self.coords.move(width - 150, height - 20)  # Перемещение
 
+        self.last = 0  # Количество изображений
+
         self.setMouseTracking(True)  # Отслеживание мыши без нажатия
 
         self.copyA = False  # Переменная для области копирования
 
         icon = 'icons/main.png'  # Ссылка на основную иконку
+
+        os.makedirs('last')  # Создание путой папки
 
         self.setWindowTitle('Paint')  # Назвние окна
         self.setGeometry(0, 35, width, height)  # Размеры окна
@@ -41,6 +47,10 @@ class Paint(QMainWindow):  # Создание окна
         # Создание изображения
         self.image = QImage(self.size(), QImage.Format_RGB32)
         self.image.fill(Qt.white)  # Заливка изображения белым цветом
+
+        # Добавление картинки
+        self.image.save('last/' + str(self.last) + '.png')
+        self.last += 1  # Добавление к количеству картинок
 
         self.drawing = False  # Переменная для рисования
         self.brushSize = 2  # Размер кисти
@@ -108,6 +118,21 @@ class Paint(QMainWindow):  # Создание окна
 
         # При нажатии вызов функции
         pasteAction.triggered.connect(self.pasteArea)
+
+        # Создание кнопки отмена
+        cancelAction = QAction(QIcon('icons/cancel.jpg'), 'Отмена', self)
+        cancelAction.setShortcut('Ctrl+Z')  # Добавление комбинации клавиш
+        fileMenu.addAction(cancelAction)  # Добавление в меню
+
+        # Вызов функции при нажатии
+        cancelAction.triggered.connect(self.returnLast)
+
+        undoAction = QAction(QIcon('icons/undo.png'), 'Вернуть', self)
+        undoAction.setShortcut('Ctrl+Shift+Z')  # Добавление комбинации клавиш
+        fileMenu.addAction(undoAction)  # Добавление в меню
+
+        # Вызов функции при нажатии
+        undoAction.triggered.connect(self.returnUp)
 
         # Создание кнопки 3 px и добавление иконки
         px3Action = QAction(QIcon('icons/3.jpg'), '3 px', self)
@@ -252,8 +277,8 @@ class Paint(QMainWindow):  # Создание окна
             self.update()  # Обновление окна
 
     def mouseReleaseEvent(self, event):  # Функция отжатия кнопки
-        if event.button == Qt.LeftButton:  # Если левая кнопка отжата
-            self.drawing = False  # переменна рисования False
+        self.lastImage()
+        self.drawing = False  # переменна рисования False
 
     def paintEvent(self, event):  # Функция рисовая
         canvasPainter = QPainter(self)  # Создание объекта
@@ -330,6 +355,7 @@ class Paint(QMainWindow):  # Создание окна
         cP.setPen(self.brushColor)  # Цвет границ
         cP.setBrush(self.brushColor)  # Цвет фигуры
         cP.drawRect(leftX, leftY, width, height)  # Нанесение прямоугольника
+        self.lastImage()
         self.update()  # Обновление рисунка
 
     def ellips(self):  # Функция создания эллипса
@@ -345,6 +371,7 @@ class Paint(QMainWindow):  # Создание окна
         cP.setPen(self.brushColor)  # Цвет границ
         cP.setBrush(self.brushColor)  # Цвет фигуры
         cP.drawEllipse(x, y, w, h)  # Рисование эллипса
+        self.lastImage()  # Добавление изображения
         self.update()  # обновление рисунка
 
     def addPicture(self):
@@ -363,6 +390,7 @@ class Paint(QMainWindow):  # Создание окна
                           'Координата левого верхнего угла по y',
                           0, 800)  # Координата левого верхнего угла по y
         painter.drawImage(x, y, img)  # Вывод изображения
+        self.lastImage()  # Добавление изображения
         self.update()  # Обновление окна
 
     def line(self):
@@ -382,6 +410,7 @@ class Paint(QMainWindow):  # Создание окна
         cP.setPen(QPen(self.brushColor, self.brushSize))  # Цвет границ
         cP.setBrush(self.brushColor)  # Цвет фигуры
         cP.drawLine(x1, y1, x2, y2)  # Рисование линии
+        self.lastImage()  # Добавление изображения
         self.update()  # Обновление окна
 
     def star(self):
@@ -410,6 +439,7 @@ class Paint(QMainWindow):  # Создание окна
                            QPoint(x3, y3), QPoint(x1, y1),
                            QPoint(x1 + x1 - x3, y3)
                            ])
+        self.lastImage()  # Добавление изображения
         cP.drawPolygon(points)  # Нарисовать полигон
 
     def triangle(self):  # Функция для рисования треугольника
@@ -435,6 +465,7 @@ class Paint(QMainWindow):  # Создание окна
         cP.setPen(self.brushColor)  # Цвет границ
         cP.setBrush(self.brushColor)  # Цвет фигуры
         points = QPolygon([QPoint(x1, y1), QPoint(x2, y2), QPoint(x3, y3)])
+        self.lastImage()  # Добавление изображения
         cP.drawPolygon(points)  # Нарисовать полигон
 
     def copyArea(self):  # Функция копирования области
@@ -450,8 +481,8 @@ class Paint(QMainWindow):  # Создание окна
 
     def writeText(self):  # Функция для вывода текста
         i, okBtnPressed = QInputDialog.getText(
-                    self, "Текст", "Введите текст"
-                )  # Диалоговое окно для ввода текста
+            self, "Текст", "Введите текст"
+                    )  # Диалоговое окно для ввода текста
         cP = QPainter(self.image)
         cP.setPen(self.brushColor)
         cP.setFont(QFont('Decorative', self.get_cord('Шрифт', 'Шрифт',
@@ -463,6 +494,7 @@ class Paint(QMainWindow):  # Создание окна
                                   'Координата левого нижнего угла по y',
                                   0, 2000),
                     i)  # Координата
+        self.lastImage()  # Добавление изображения
         self.update()  # Обновление страницы
 
     def cutArea(self):  # Функция для вырезания области
@@ -492,6 +524,7 @@ class Paint(QMainWindow):  # Создание окна
                           0, 800)  # Координата левого верхнего угла по y
         painter = QPainter(self.image)  # Создание объекта
         painter.drawImage(x, y, self.copyA)  # Вывод изображения
+        self.lastImage()  # Добавление изображения
         self.update()  # Обновление окна
 
     def sizeAdd(self):  # Функция изменения размера окна
@@ -515,9 +548,42 @@ class Paint(QMainWindow):  # Создание окна
                                      QMessageBox.No, QMessageBox.No)
 
         if reply == QMessageBox.Yes:  # Если Да
+            try:
+                shutil.rmtree('last')
+            except Exception:
+                pass
             event.accept()  # То выход
         else:
             event.ignore()  # Иначе игнорировать
+
+    def lastImage(self):  # Функция добавления картинки в папку
+        self.image.save('last/' + str(self.last) + '.png')  # Сохранение
+        self.last += 1
+        i = 0
+        while len(os.listdir('last/')) > self.last:  # Если картинок больше
+            os.remove('last/' + str(self.last + i) + '.png')
+            i += 1
+
+    def returnLast(self):  # Функция возвращения последней картинки
+        if self.last - 1 >= 0:
+            self.image.fill(Qt.white)  # Заливки пустым
+            self.last -= 2
+            painter = QPainter(self.image)
+
+            # Возвращение последней картинки
+            painter.drawImage(0, 0, QImage('last/' + str(self.last) + '.png'))
+            self.last += 1
+            self.update()  # Обновление картинки
+
+    def returnUp(self):  # Функция возвращения передней картинки
+        if self.last != len(os.listdir('last/')):
+            self.image.fill(Qt.white)
+            painter = QPainter(self.image)
+
+            # Возвращение передней картинки
+            painter.drawImage(0, 0, QImage('last/' + str(self.last) + '.png'))
+            self.last += 1
+            self.update()  # Обновление картинки
 
 
 if __name__ == '__main__':
