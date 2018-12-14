@@ -11,12 +11,17 @@ class Paint(QMainWindow):  # Создание окна
     def __init__(self):  # Инициализация
         super().__init__()
 
-        width = self.get_cord('Ширина окна',
-                              'Ширина окна',
-                              0, 2000)  # Ширина окна
-        height = self.get_cord('Высота окна',
-                               'Высота окна',
-                               0, 2000)  # Ширина окна
+        try:  # Попытка прочитать файл
+            f = open('size.txt', 'r')
+            width = int(f.readline())  # Ширина окна
+            height = int(f.readline())  # Высота окна
+            f.close()
+        except Exception:  # Если ошибка
+            f = open('size.txt', 'w')  # Создать файл
+            f.write('1200' + '\n' + '900')  # Перезапись файла
+            f.close()  # Закрытие файла
+            width = 1200
+            height = 900
 
         self.coords = QLabel(self)  # Координаты мыши
         self.coords.setText("Координаты:None, None")  # Изначальные координаты
@@ -64,6 +69,12 @@ class Paint(QMainWindow):  # Создание окна
         clearAction.setShortcut('Ctrl+A')  # Добавление комбинации клавиш
         fileMenu.addAction(clearAction)  # Добавление в меню
         clearAction.triggered.connect(self.clear)  # Вызов функции при нажатии
+
+        # Создание кнопки для изменения размера окна
+        sizeAction = QAction(QIcon('icons/size.png'), 'Изменить размер', self)
+        sizeAction.setShortcut('Ctrl+T')  # Добавление комбинации клавиш
+        fileMenu.addAction(sizeAction)  # Добавление в меню
+        sizeAction.triggered.connect(self.sizeAdd)  # Вызов функции при нажатии
 
         # Создание кнопки для добавления изображения
         addAction = QAction(QIcon('icons/picture.jpg'),
@@ -313,7 +324,7 @@ class Paint(QMainWindow):  # Создание окна
         # Координата левого верхнего угла по y
         leftY = self.get_cord("Координата y",
                               "Координата левого верхнего угла по y", 0, 800)
-        width = self.get_cord("Длинна", "Длинна", 0, 1200)  # Длинна
+        width = self.get_cord("Длина", "Длина", 0, 1200)  # Длина
         height = self.get_cord("Высота", "Высота", 0, 800)  # высота
         cP = QPainter(self.image)  # Создание объекта класса QPainter
         cP.setPen(self.brushColor)  # Цвет границ
@@ -443,7 +454,7 @@ class Paint(QMainWindow):  # Создание окна
                 )  # Диалоговое окно для ввода текста
         cP = QPainter(self.image)
         cP.setPen(self.brushColor)
-        cP.setFont(QFont('Decorative', self.get_cord('Ширина', 'Ширина',
+        cP.setFont(QFont('Decorative', self.get_cord('Шрифт', 'Шрифт',
                                                      1, 12000)))  # Шрифт
         cP.drawText(self.get_cord('Координата x',
                                   'Координата левого нижнего угла по x',
@@ -482,6 +493,19 @@ class Paint(QMainWindow):  # Создание окна
         painter = QPainter(self.image)  # Создание объекта
         painter.drawImage(x, y, self.copyA)  # Вывод изображения
         self.update()  # Обновление окна
+
+    def sizeAdd(self):  # Функция изменения размера окна
+        w = self.get_cord('Ширина окна',
+                          'Ширина окна',
+                          0, 2000)  # Ширина окна
+        h = self.get_cord('Высота окна',
+                          'Высота окна',
+                          0, 1200)  # Высота окна
+        f = open('size.txt', 'w')  # Открытие файла с размерами
+        f.write(str(w) + '\n' + str(h))  # Перезапись файла
+        f.close()  # Закрытие файла
+        QMessageBox.about(self, "Перезапустите программу",
+                          "Перезапустите программу")  # Сообщение
 
     def closeEvent(self, event):  # Функция для закрытия
         # Сообщение при закрытии приложения
